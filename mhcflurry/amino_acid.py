@@ -68,11 +68,16 @@ class Alphabet(object):
         Encode a set of equal length peptides as a matrix of their
         amino acid indices.
         """
+        #########
+        ## RNA ##
+        #########
         X = np.zeros((len(peptides), peptide_length), dtype=int)
         index_dict = self.index_dict()
         for i, peptide in enumerate(peptides):
+            peptide, rna = peptide.split(",")
             for j, amino_acid in enumerate(peptide):
                 X[i, j] = index_dict[amino_acid]
+            X[i, len(peptide)] = rna
         return X
 
     def hotshot_encoding(
@@ -84,13 +89,18 @@ class Alphabet(object):
         where each letter is transformed into a length 20 vector with a single
         element that is 1 (and the others are 0).
         """
+        #########
+        ## RNA ##
+        #########
         shape = (len(peptides), peptide_length, 20)
         index_dict = self.index_dict()
         X = np.zeros(shape, dtype=bool)
         for i, peptide in enumerate(peptides):
+            peptide, rna = peptide.split(",")
             for j, amino_acid in enumerate(peptide):
                 k = index_dict[amino_acid]
                 X[i, j, k] = 1
+            X[i, len(peptide), 22] = rna
         return X
 
 

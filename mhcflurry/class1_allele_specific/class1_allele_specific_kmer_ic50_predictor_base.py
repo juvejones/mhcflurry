@@ -38,6 +38,9 @@ class Class1AlleleSpecificKmerIC50PredictorBase(IC50PredictorBase):
     k-mer representation of peptides and don't require scanning over
     a longer sequence to find a binding core (like you might for Class II).
     """
+    #########
+    ## RNA ##
+    #########
     hyperparameter_defaults = (HyperparameterDefaults(
         kmer_size=9)
         .extend(IC50PredictorBase.hyperparameter_defaults))
@@ -98,18 +101,21 @@ class Class1AlleleSpecificKmerIC50PredictorBase(IC50PredictorBase):
         Returns 2d array of encoded peptides and 1d array indicating the
         original peptide index for each row.
         """
+        #########
+        ## RNA ##
+        #########
         indices = []
         encoded_matrices = []
         for i, peptide in enumerate(peptides):
             matrix, _, _, _ = fixed_length_index_encoding(
                 peptides=[peptide],
-                desired_length=self.kmer_size,
+                desired_length=self.kmer_size + 1,
                 allow_unknown_amino_acids=self.allow_unknown_amino_acids)
             encoded_matrices.append(matrix)
             indices.extend([i] * len(matrix))
         combined_matrix = np.concatenate(encoded_matrices)
         index_array = np.array(indices)
-        expected_shape = (len(index_array), self.kmer_size)
+        expected_shape = (len(index_array), self.kmer_size+1)
         assert combined_matrix.shape == expected_shape, \
             "Expected shape %s but got %s" % (
                 expected_shape, combined_matrix.shape)

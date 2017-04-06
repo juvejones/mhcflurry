@@ -48,6 +48,9 @@ class Class1BindingPredictor(Class1AlleleSpecificKmerIC50PredictorBase):
     fixed-length (k-mer) index encoding for inputs and outputs
     a value between 0 and 1 (where 1 is the strongest binder).
     """
+    #########
+    ## RNA ##
+    #########
 
     network_hyperparameter_defaults = HyperparameterDefaults(
         embedding_output_dim=32,
@@ -87,7 +90,8 @@ class Class1BindingPredictor(Class1AlleleSpecificKmerIC50PredictorBase):
             max_ic50=max_ic50,
             allow_unknown_amino_acids=allow_unknown_amino_acids,
             verbose=verbose,
-            kmer_size=kmer_size)
+            kmer_size=kmer_size,
+            rna_expression=True)
 
         specified_network_hyperparameters = (
             self.network_hyperparameter_defaults.subselect(hyperparameters))
@@ -97,7 +101,7 @@ class Class1BindingPredictor(Class1AlleleSpecificKmerIC50PredictorBase):
 
         if model is None:
             model = make_embedding_network(
-                peptide_length=kmer_size,
+                peptide_length=kmer_size + int(rna_expression),
                 ##allow both 'X' and ' ' types of unknown aa##
                 n_amino_acids=n_amino_acids + 2*int(allow_unknown_amino_acids),
                 **self.network_hyperparameter_defaults.subselect(
