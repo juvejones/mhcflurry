@@ -37,6 +37,7 @@ from ..regression_target import MAX_IC50, ic50_to_regression_target
 from ..training_helpers import (
     combine_training_arrays,
     extend_with_negative_random_samples,
+    split_training_arrays,
 )
 from ..regression_target import regression_target_to_ic50
 from ..hyperparameters import HyperparameterDefaults
@@ -60,7 +61,8 @@ class Class1BindingPredictor(Class1AlleleSpecificKmerIC50PredictorBase):
         optimizer="rmsprop",
         output_activation="sigmoid",
         activation="tanh",
-        dropout_probability=0.0)
+        dropout_probability=0.0,
+        rna_expression=True)
 
     fit_hyperparameter_defaults = HyperparameterDefaults(
         n_training_epochs=250,
@@ -83,6 +85,7 @@ class Class1BindingPredictor(Class1AlleleSpecificKmerIC50PredictorBase):
             kmer_size=9,
             n_amino_acids=20,
             verbose=False,
+            rna_expression=True,
             **hyperparameters):
         Class1AlleleSpecificKmerIC50PredictorBase.__init__(
             self,
@@ -90,8 +93,7 @@ class Class1BindingPredictor(Class1AlleleSpecificKmerIC50PredictorBase):
             max_ic50=max_ic50,
             allow_unknown_amino_acids=allow_unknown_amino_acids,
             verbose=verbose,
-            kmer_size=kmer_size,
-            rna_expression=True)
+            kmer_size=kmer_size)
 
         specified_network_hyperparameters = (
             self.network_hyperparameter_defaults.subselect(hyperparameters))
@@ -101,7 +103,7 @@ class Class1BindingPredictor(Class1AlleleSpecificKmerIC50PredictorBase):
 
         if model is None:
             model = make_embedding_network(
-                peptide_length=kmer_size + int(rna_expression),
+                peptide_length=(kmer_size), #+ int(rna_expression)),
                 ##allow both 'X' and ' ' types of unknown aa##
                 n_amino_acids=n_amino_acids + 2*int(allow_unknown_amino_acids),
                 **self.network_hyperparameter_defaults.subselect(
@@ -300,10 +302,14 @@ class Class1BindingPredictor(Class1AlleleSpecificKmerIC50PredictorBase):
                         n_random_negative_samples,
                         max_amino_acid_encoding_value=(
                             self.max_amino_acid_encoding_value))
-
+            
+            # split input X into peptide sequence encodings and RNA-exp encoding 
+            X1_curr_iter, X2_curr_iter = split_training_arrays(X_curr_iter, 9)
+            
             self.model.fit(
-                X_curr_iter,
-                Y_curr_iter,
+                x=[X1_curr_iter,
+                   X2_curr_iter],
+                y=Y_curr_iter,
                 sample_weight=weights_curr_iter,
                 nb_epoch=1,
                 verbose=0,
@@ -317,8 +323,12 @@ class Class1BindingPredictor(Class1AlleleSpecificKmerIC50PredictorBase):
         """
         X = check_valid_index_encoding_array(
             X,
-            allow_unknown_amino_acids=self.allow_unknown_amino_acids)
-        return self.model.predict(X, verbose=False).flatten()
+            allow_unknown_amino_acids=self.allow_unknown_amino_acids,
+            allow_rna=True)
+        # split input X into peptide sequence encodings and RNA-exp encoding                                      | 
+        X1, X2 = split_training_arrays(X, 9)
+        print(X1, X2)          
+        return self.model.predict([X1,X2], verbose=False).flatten()
 
     def predict_ic50_for_kmer_encoded_array(self, X):
         """

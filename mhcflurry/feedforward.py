@@ -22,6 +22,8 @@ from keras.models import Sequential
 from keras.layers.core import Dense, Activation, Flatten, Dropout
 from keras.layers.embeddings import Embedding
 from keras.layers.normalization import BatchNormalization
+from keras.layers.merge import Add, Concatenate
+from keras.layers import Merge
 
 import theano
 
@@ -42,6 +44,7 @@ def make_network(
         embedding_init_method="glorot_uniform",
         model=None,  
         optimizer="rmsprop",
+        rna_expression=True,
         ###loss="mse",
         loss="binary_crossentropy" ### Use binary classification objective
         ):
@@ -74,10 +77,20 @@ def make_network(
                 input_dim=embedding_input_dim,
                 output_dim=embedding_output_dim,
                 input_length=input_size,
-                init=embedding_init_method,
+                embeddings_initializer=embedding_init_method,
                 dropout=dropout_probability))
+        
         model.add(Flatten())
-
+        ###################
+        ##add fixed feature
+        ###################
+        if rna_expression:
+            model_fix=Sequential()
+            model_fix.add(Dense(input_dim=1, units=embedding_output_dim))
+            model_final = Sequential()
+            model_final.add(Merge([model, model_fix], mode='concat'))
+            model = model_final
+ 
         input_size = input_size * embedding_output_dim
 
     layer_sizes = (input_size,) + tuple(layer_sizes)

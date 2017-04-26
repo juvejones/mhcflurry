@@ -74,7 +74,9 @@ class Alphabet(object):
         X = np.zeros((len(peptides), peptide_length), dtype=int)
         index_dict = self.index_dict()
         for i, peptide in enumerate(peptides):
-            peptide, rna = peptide.split(",")
+            peptiderna = str(peptide)
+            peptide = peptiderna.split(",")[0]
+            rna = peptiderna.split(",")[1]
             for j, amino_acid in enumerate(peptide):
                 X[i, j] = index_dict[amino_acid]
             X[i, len(peptide)] = rna
@@ -96,7 +98,9 @@ class Alphabet(object):
         index_dict = self.index_dict()
         X = np.zeros(shape, dtype=bool)
         for i, peptide in enumerate(peptides):
-            peptide, rna = peptide.split(",")
+            peptiderna = str(peptide)
+            peptide = peptiderna.split(",")[0]
+            rna = peptiderna.split(",")[1]
             for j, amino_acid in enumerate(peptide):
                 k = index_dict[amino_acid]
                 X[i, j, k] = 1

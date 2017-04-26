@@ -195,11 +195,16 @@ def fixed_length_from_many_peptides(
 
     insert_amino_acid_letters : str | list of characters
     """
+    #########
+    ## RNA ##
+    #########
     all_fixed_length_peptides = []
     indices = []
     counts = []
     for i, peptide in enumerate(peptides):
-        n = len(peptide)
+        peptide_seq = str(peptide).split(',')[0]
+        n = len(peptide_seq)
+        ## only want to check sequence part, not rna score
         if n == desired_length:
             fixed_length_peptides = [peptide]
         elif n < desired_length:
@@ -282,6 +287,9 @@ def fixed_length_index_encoding(
     have a count of 2. These counts can be useful for down-weighting the
     importance of multiple feature vectors which originate from the same sample.
     """
+    #########
+    ## RNA ##
+    #########
     if allow_unknown_amino_acids:
         insert_letters = ["X"]
         index_encoding = amino_acids_with_unknown.index_encoding
@@ -298,15 +306,22 @@ def fixed_length_index_encoding(
             start_offset_extend=start_offset_extend,
             end_offset_extend=end_offset_extend,
             insert_amino_acid_letters=insert_letters)
-    X = index_encoding(fixed_length, desired_length)
+    X = index_encoding(fixed_length, (desired_length + 1))
     return (X, fixed_length, original_peptide_indices, counts)
 
-def check_valid_index_encoding_array(X, allow_unknown_amino_acids=True):
+def check_valid_index_encoding_array(X, 
+                                     allow_unknown_amino_acids=True,
+                                     allow_rna=True):
         X = np.asarray(X)
         if len(X.shape) != 2:
             raise ValueError("Expected 2d input, got array with shape %s" % (
                 X.shape,))
-        max_expected_index = 22 if allow_unknown_amino_acids else 20
+        if allow_rna:
+            max_expected_index = 100
+        elif allow_unknown_amino_acids:
+            max_expected_index = 22
+        else:
+            max_expected_index = 20
         #max_expected_index = 20 if allow_unknown_amino_acids else 19
         if X.max() > max_expected_index:
             raise ValueError(

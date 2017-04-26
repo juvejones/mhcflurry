@@ -153,3 +153,22 @@ def extend_with_negative_random_samples(
     assert len(Y_with_negative) == len(Y) + n_random_negative_samples
     assert len(weights_with_negative) == len(weights) + n_random_negative_samples
     return X_with_negative, Y_with_negative, weights_with_negative
+
+def split_training_arrays(X, input_size):
+    """
+    Split 2d array X into two input arrays of size (input_seq_num, input_size) and (input_seq_num, 1)
+    The second one points to fixed features such as RNA-expression score
+     
+    Parameters
+    ----------
+    X : numpy.ndarray                                                                                       
+        2d array of integer amino acid encodings + fixed RNA score encoding
+    
+    input_size : int
+        length of the 1d of X1, equal to peptide length
+   
+    Returns X1, X2        
+    """
+    X1 = X[:,:input_size]
+    X2 = X[:,-1]
+    return X1, X2 

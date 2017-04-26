@@ -109,7 +109,7 @@ class Class1AlleleSpecificKmerIC50PredictorBase(IC50PredictorBase):
         for i, peptide in enumerate(peptides):
             matrix, _, _, _ = fixed_length_index_encoding(
                 peptides=[peptide],
-                desired_length=self.kmer_size + 1,
+                desired_length=self.kmer_size,
                 allow_unknown_amino_acids=self.allow_unknown_amino_acids)
             encoded_matrices.append(matrix)
             indices.extend([i] * len(matrix))

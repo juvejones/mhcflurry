@@ -540,6 +540,12 @@ class Dataset(object):
             - sample_weights (1 / kmer count per peptide)
             - indices of original peptides from which kmers were extracted
         """
+        #########
+        ## RNA ##
+        #########
+        # No need for extending to account for RNAseq digit #
+        extend_length = kmer_size
+                   
         if len(self.peptides) == 0:
             return (
                 np.empty((0, kmer_size), dtype=int),
@@ -551,7 +557,7 @@ class Dataset(object):
         X_index, _, original_peptide_indices, counts = \
             fixed_length_index_encoding(
                 peptides=self.peptides,
-                desired_length=kmer_size,
+                desired_length = extend_length,
                 start_offset_shorten=0,
                 end_offset_shorten=0,
                 start_offset_extend=0,
