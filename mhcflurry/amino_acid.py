@@ -76,7 +76,7 @@ class Alphabet(object):
         for i, peptide in enumerate(peptides):
             peptiderna = str(peptide)
             peptide = peptiderna.split(",")[0]
-            rna = peptiderna.split(",")[1]
+            rna = float(peptiderna.split(",")[1])
             for j, amino_acid in enumerate(peptide):
                 X[i, j] = index_dict[amino_acid]
             X[i, len(peptide)] = rna
@@ -100,7 +100,7 @@ class Alphabet(object):
         for i, peptide in enumerate(peptides):
             peptiderna = str(peptide)
             peptide = peptiderna.split(",")[0]
-            rna = peptiderna.split(",")[1]
+            rna = float(peptiderna.split(",")[1])
             for j, amino_acid in enumerate(peptide):
                 k = index_dict[amino_acid]
                 X[i, j, k] = 1

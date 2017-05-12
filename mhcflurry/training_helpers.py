@@ -170,5 +170,5 @@ def split_training_arrays(X, input_size):
     Returns X1, X2        
     """
     X1 = X[:,:input_size]
-    X2 = X[:,-1]
+    X2 = X[:,-1].astype(float)
     return X1, X2 

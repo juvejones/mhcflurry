@@ -317,7 +317,7 @@ def check_valid_index_encoding_array(X,
             raise ValueError("Expected 2d input, got array with shape %s" % (
                 X.shape,))
         if allow_rna:
-            max_expected_index = 100
+            max_expected_index = 100 
         elif allow_unknown_amino_acids:
             max_expected_index = 22
         else:

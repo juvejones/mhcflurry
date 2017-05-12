@@ -18,13 +18,12 @@ from __future__ import (
     absolute_import,
 )
 
-from keras.models import Sequential
+from keras.models import Sequential, Model
 from keras.layers.core import Dense, Activation, Flatten, Dropout
 from keras.layers.embeddings import Embedding
 from keras.layers.normalization import BatchNormalization
 from keras.layers.merge import Add, Concatenate
-from keras.layers import Merge
-
+from keras.layers import Input, regularizers
 import theano
 
 theano.config.exception_verbosity = 'high'
@@ -42,15 +41,14 @@ def make_network(
         batch_normalization=True,
         initial_embedding_weights=None,
         embedding_init_method="glorot_uniform",
-        model=None,  
         optimizer="rmsprop",
+        model = None,
         rna_expression=True,
         ###loss="mse",
         loss="binary_crossentropy" ### Use binary classification objective
         ):
-
-    if model is None:
-        model = Sequential()
+    if model == None:
+        sequence_input = Input(shape=(input_size,))
 
     if embedding_input_dim:
         if not embedding_output_dim:
@@ -66,30 +64,27 @@ def make_network(
                     "(%d, %d)" % (
                         embedding_input_dim, embedding_output_dim,
                         n_rows, n_cols))
-            model.add(Embedding(
+            sequence_layer = Embedding(
                 input_dim=embedding_input_dim,
                 output_dim=embedding_output_dim,
                 input_length=input_size,
                 weights=[initial_embedding_weights],
-                dropout=dropout_probability))
+                dropout=dropout_probability)(sequence_input)
         else:
-            model.add(Embedding(
+            sequence_layer = Embedding(
                 input_dim=embedding_input_dim,
                 output_dim=embedding_output_dim,
                 input_length=input_size,
                 embeddings_initializer=embedding_init_method,
-                dropout=dropout_probability))
+                dropout=dropout_probability)(sequence_input)
         
-        model.add(Flatten())
-        ###################
-        ##add fixed feature
-        ###################
-        if rna_expression:
-            model_fix=Sequential()
-            model_fix.add(Dense(input_dim=1, units=embedding_output_dim))
-            model_final = Sequential()
-            model_final.add(Merge([model, model_fix], mode='concat'))
-            model = model_final
+        sequence_layer = Flatten()(sequence_layer)
+        #####################
+        # add fixed feature #
+        #####################
+        add_input = Input(shape = (1,))
+        add_layer = Dense(1, input_shape=(1,))(add_input)
+        merged_layer = Concatenate()([sequence_layer, add_layer])
  
         input_size = input_size * embedding_output_dim
 
@@ -104,25 +99,31 @@ def make_network(
         previous_dim = layer_sizes[i - 1]
 
         # hidden layer fully connected layer
-        model.add(
-            Dense(
+        hidden_layer1 = Dense(
                 input_dim=previous_dim,
                 output_dim=dim,
-                init=init))
-        model.add(Activation(activation))
+                init=init, activation = activation)(merged_layer)
+        #model.add(Activation(activation))
 
+        #if rna_expression:
+            #hidden_layer2 = Dense(dim, input_shape=(1,), 
+            #    activation = activation, 
+            #    kernel_regularizer=regularizers.l1(0.01))(add_layer)
+        #   hidden_layer1 = Concatenate()([hidden_layer1, add_layer])
+        
         if batch_normalization:
-            model.add(BatchNormalization())
+            hidden_layer = BatchNormalization()(hidden_layer1)
 
         if dropout_probability > 0:
-            model.add(Dropout(dropout_probability))
+            hidden_layer = Dropout(dropout_probability)(hidden_layer1)
 
     # output
-    model.add(Dense(
+    output_layer = Dense(
         input_dim=layer_sizes[-1],
         output_dim=1,
-        init=init))
-    model.add(Activation(output_activation))
+        init=init, activation = output_activation)(hidden_layer)
+    #model.add(Activation(output_activation))
+    model = Model(inputs=[sequence_input, add_input], outputs=output_layer)
     model.compile(loss=loss, optimizer=optimizer)
     return model
 

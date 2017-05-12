@@ -117,6 +117,7 @@ class Class1BindingPredictor(Class1AlleleSpecificKmerIC50PredictorBase):
         self.hyperparameters = effective_hyperparameters
         self.name = name
         self.model = model
+        self.model.summary()
 
     def __getstate__(self):
         result = dict(self.__dict__)
@@ -327,7 +328,8 @@ class Class1BindingPredictor(Class1AlleleSpecificKmerIC50PredictorBase):
             allow_rna=True)
         # split input X into peptide sequence encodings and RNA-exp encoding                                      | 
         X1, X2 = split_training_arrays(X, 9)
-        print(X1, X2)          
+        assert all(isinstance(n, float) for n in X2), \
+            "element %f not float" % n 
         return self.model.predict([X1,X2], verbose=False).flatten()
 
     def predict_ic50_for_kmer_encoded_array(self, X):
